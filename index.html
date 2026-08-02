@@ -453,22 +453,29 @@
     let currentPortfolio = 'isa-combined';
     let liveDataCache = {};
 
-    // Fetch data from Finnhub
+    // Fetch data from Finnhub via CORS proxy
     async function fetchFinnhubData(ticker) {
       if (liveDataCache[ticker]) {
         return liveDataCache[ticker];
       }
 
       try {
-        const response = await fetch(
-          `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`
-        );
+        // Use CORS proxy to bypass browser restrictions
+        const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`;
+        const proxyUrl = `https://cors-anywhere.herokuapp.com/${finnhubUrl}`;
+        
+        const response = await fetch(proxyUrl, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
         if (!response.ok) throw new Error('API error');
         const data = await response.json();
         liveDataCache[ticker] = data;
         return data;
       } catch (error) {
-        console.log(`Could not fetch data for ${ticker}`);
+        console.log(`Could not fetch data for ${ticker}:`, error);
         return null;
       }
     }
