@@ -289,9 +289,6 @@
   </div>
 
   <script>
-    // Finnhub API Key
-    const FINNHUB_API_KEY = 'd9nms3hr01qvumgb10m0d9nms3hr01qvumgb10mg';
-
     // Real holdings data from your PDFs
     const portfolios = {
       'isa-combined': [
@@ -453,36 +450,27 @@
     let currentPortfolio = 'isa-combined';
     let liveDataCache = {};
 
-    // Fetch data from Finnhub via CORS proxy
-    async function fetchFinnhubData(ticker) {
+    // Call Netlify Function securely
+    async function fetchStockData(ticker) {
       if (liveDataCache[ticker]) {
         return liveDataCache[ticker];
       }
 
       try {
-        // Use CORS proxy to bypass browser restrictions
-        const finnhubUrl = `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`;
-        const proxyUrl = `https://cors-anywhere.herokuapp.com/${finnhubUrl}`;
-        
-        const response = await fetch(proxyUrl, {
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        });
-        
+        // Call our backend function (no API key exposed)
+        const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
         if (!response.ok) throw new Error('API error');
-        const data = await response.json();
-        liveDataCache[ticker] = data;
-        return data;
+        const result = await response.json();
+        liveDataCache[ticker] = result.data;
+        return result.data;
       } catch (error) {
-        console.log(`Could not fetch data for ${ticker}:`, error);
+        console.log(`Could not fetch data for ${ticker}`);
         return null;
       }
     }
 
     function scoreGrowthQuality(ticker, liveData) {
       if (!liveData || !liveData.pe) return null;
-      // Simple scoring: lower P/E is better, higher earning per share is better
       const peScore = Math.max(0, Math.min(50, (20 / liveData.pe) * 50));
       const epsScore = liveData.eps ? 30 : 0;
       const priceScore = liveData.d ? 20 : 10;
@@ -491,7 +479,6 @@
 
     function scoreValueDividend(ticker, liveData) {
       if (!liveData || !liveData.pe) return null;
-      // Value scoring: focus on low P/E and dividend yield
       const peScore = Math.max(0, Math.min(50, (15 / liveData.pe) * 50));
       const divScore = liveData.d ? 30 : 10;
       return Math.max(20, Math.min(100, peScore + divScore + 20));
@@ -524,7 +511,6 @@
       const tbody = document.getElementById('holdingsTable');
       tbody.innerHTML = '';
 
-      // Create all rows first
       data.forEach(pos => {
         totalValue += pos.value;
         totalRet += (pos.ret || 0);
@@ -547,8 +533,8 @@
         row.id = `row-${ticker}`;
         tbody.appendChild(row);
 
-        // Fetch data in background
-        fetchFinnhubData(ticker).then(liveData => {
+        // Fetch live data
+        fetchStockData(ticker).then(liveData => {
           const score = mode === 'growth' ? scoreGrowthQuality(ticker, liveData) : scoreValueDividend(ticker, liveData);
           const pe = liveData?.pe?.toFixed(1) || '—';
           const div = liveData?.d?.toFixed(2) || '—';
@@ -576,8 +562,6 @@
       document.getElementById('posCount').textContent = data.length + ' positions';
       document.getElementById('avgScore').textContent = 'Loading...';
       document.getElementById('scoreGrade').textContent = 'Fetching live data...';
-      document.getElementById('riskCount').textContent = '—';
-      document.getElementById('buyCount').textContent = '—';
     }
 
     function switchPortfolio(portfolio) {
