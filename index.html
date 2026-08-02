@@ -138,6 +138,7 @@
     .loading {
       color: #ffaa00;
       font-style: italic;
+      font-size: 10px;
     }
 
     .pension-tracker {
@@ -175,6 +176,16 @@
       font-size: 10px;
       color: #888;
     }
+
+    .legend {
+      background: rgba(0, 255, 0, 0.05);
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 20px;
+      font-size: 11px;
+      color: #ccc;
+    }
   </style>
 </head>
 <body>
@@ -187,9 +198,9 @@
     <!-- Portfolio Selector -->
     <div class="portfolio-selector">
       <button class="port-btn active" onclick="switchPortfolio('isa-combined')">DAN ISA COMBINED</button>
-      <button class="port-btn" onclick="switchPortfolio('isa-t212')">T212</button>
-      <button class="port-btn" onclick="switchPortfolio('isa-ig')">IG</button>
-      <button class="port-btn" onclick="switchPortfolio('isa-halifax')">HALIFAX</button>
+      <button class="port-btn" onclick="switchPortfolio('isa-t212')">T212 (33)</button>
+      <button class="port-btn" onclick="switchPortfolio('isa-ig')">IG (24)</button>
+      <button class="port-btn" onclick="switchPortfolio('isa-halifax')">HALIFAX (10)</button>
       <button class="port-btn" onclick="switchPortfolio('pension')">PENSION (£458k)</button>
     </div>
 
@@ -223,7 +234,7 @@
       <div class="card">
         <div class="card-label">AVG SCORE</div>
         <div class="card-value" id="avgScore">—</div>
-        <div class="card-secondary" id="scoreGrade">Loading...</div>
+        <div class="card-secondary" id="scoreGrade">Calculating...</div>
       </div>
       <div class="card">
         <div class="card-label">🚩 RISK FLAGS</div>
@@ -245,21 +256,22 @@
             <th>TICKER</th>
             <th style="text-align: right;">VALUE</th>
             <th style="text-align: right;">RETURN</th>
+            <th style="text-align: right;">RETURN %</th>
             <th style="text-align: right;">P/E</th>
-            <th style="text-align: right;">DIV YIELD</th>
+            <th style="text-align: right;">DIV %</th>
             <th>SCORE</th>
             <th style="text-align: center;">SIGNAL</th>
             <th>STATUS</th>
           </tr>
         </thead>
         <tbody id="holdingsTable">
-          <tr><td colspan="8" class="loading">Loading portfolio data and live metrics...</td></tr>
+          <tr><td colspan="9" class="loading">Loading portfolio and live metrics...</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Scoring Legend -->
-    <div style="background: rgba(0, 255, 0, 0.05); border: 1px solid #333; border-radius: 4px; padding: 12px; margin-top: 20px; font-size: 11px; color: #ccc;">
+    <!-- Legend -->
+    <div class="legend">
       <div style="color: #00ff00; font-weight: bold; margin-bottom: 8px;">📊 SCORING METHODOLOGY</div>
       
       <div style="margin-bottom: 12px;">
@@ -277,10 +289,13 @@
   </div>
 
   <script>
-    // Real holdings data extracted from your PDFs
+    // Finnhub API Key
+    const FINNHUB_API_KEY = 'd9nms3hr01qvumgb10m0d9nms3hr01qvumgb10mg';
+
+    // Real holdings data from your PDFs
     const portfolios = {
       'isa-combined': [
-        // Trading 212
+        // Trading 212 (33 stocks)
         { ticker: 'ABF', value: 1043.50, ret: 84.50 },
         { ticker: 'GSK', value: 3283.55, ret: 966 },
         { ticker: 'BP', value: 1458.60, ret: 266 },
@@ -315,7 +330,7 @@
         { ticker: 'WFRD', value: 3516, ret: 1414.3 },
         { ticker: 'YOU', value: 797.25, ret: 287.75 },
         { ticker: 'ZM', value: 950.50, ret: 207.1 },
-        // IG
+        // IG ISA (24 stocks)
         { ticker: 'ASOS', value: 249.84, ret: -2658.96 },
         { ticker: 'L&G', value: 87.00, ret: 31.94 },
         { ticker: 'LTRU', value: 158.75, ret: -225.52 },
@@ -338,7 +353,7 @@
         { ticker: 'PRGO', value: 251.28, ret: -370.32 },
         { ticker: 'SWKS', value: 632.85, ret: -438.35 },
         { ticker: 'WDAY', value: 1329.95, ret: -10.35 },
-        // Halifax
+        // Halifax (10 stocks)
         { ticker: 'DOCUSIGN', value: 366.02, ret: -202.64 },
         { ticker: 'EDITAS', value: 21.05, ret: -220.74 },
         { ticker: 'EVRAZ', value: 20.83, ret: -85.64 },
@@ -349,63 +364,134 @@
         { ticker: 'PICTET', value: 1383.02, ret: 339.62 },
         { ticker: 'SSP', value: 1592.41, ret: -865.36 },
         { ticker: 'TAYLOR', value: 781.56, ret: -802.07 },
+        { ticker: 'TULLOW', value: 7.03, ret: -357.96 },
       ],
       'isa-t212': [
         { ticker: 'ABF', value: 1043.50, ret: 84.50 },
         { ticker: 'GSK', value: 3283.55, ret: 966 },
         { ticker: 'BP', value: 1458.60, ret: 266 },
+        { ticker: 'IPX', value: 898.72, ret: -1148 },
+        { ticker: 'DGE', value: 543.58, ret: -4169.37 },
+        { ticker: 'HIK', value: 951, ret: -5970 },
+        { ticker: 'SOM', value: 575, ret: 0 },
+        { ticker: 'GFTU', value: 1385.23, ret: 12961.16 },
         { ticker: 'ADBE', value: 2001.20, ret: -402.72 },
+        { ticker: 'ADSK', value: 2339.90, ret: 415.4 },
+        { ticker: 'AMZN', value: 1622.94, ret: 197.34 },
+        { ticker: 'BAC', value: 805.35, ret: 189.15 },
+        { ticker: 'BIDU', value: 552.25, ret: 138.5 },
+        { ticker: 'BIIB', value: 1897.95, ret: 682.64 },
+        { ticker: 'BMRN', value: 1500.50, ret: 175.75 },
+        { ticker: 'CMCSA', value: 2870.40, ret: -456 },
+        { ticker: 'CVX', value: 3973.29, ret: 1129.48 },
+        { ticker: 'DXCM', value: 1660, ret: 256.2 },
+        { ticker: 'GOOGL', value: 1416.76, ret: 102.72 },
+        { ticker: 'LEN', value: 2070.25, ret: -535.01 },
+        { ticker: 'LVS', value: 1368.92, ret: 75.61 },
         { ticker: 'NOW', value: 2912.83, ret: 233.4 },
+        { ticker: 'NVDA', value: 397.88, ret: 51.08 },
         { ticker: 'OKTA', value: 1412.50, ret: 577.75 },
+        { ticker: 'OTEX', value: 5022.48, ret: 335.12 },
+        { ticker: 'PFE', value: 2504, ret: 100.02 },
+        { ticker: 'REGN', value: 1522.88, ret: 253.88 },
+        { ticker: 'TTD', value: 2154, ret: -2456.15 },
+        { ticker: 'UNH', value: 1657.16, ret: 510.28 },
+        { ticker: 'VALE', value: 1507, ret: 112.57 },
+        { ticker: 'VEUA', value: 1129.88, ret: 129.88 },
+        { ticker: 'WFRD', value: 3516, ret: 1414.3 },
+        { ticker: 'YOU', value: 797.25, ret: 287.75 },
       ],
       'isa-ig': [
-        { ticker: 'GOOGL', value: 1416.76, ret: 102.72 },
+        { ticker: 'ASOS', value: 249.84, ret: -2658.96 },
+        { ticker: 'L&G', value: 87.00, ret: 31.94 },
+        { ticker: 'LTRU', value: 158.75, ret: -225.52 },
+        { ticker: 'PYPT', value: 293.76, ret: 293.76 },
+        { ticker: 'PROS', value: 1.84, ret: -3.30 },
+        { ticker: 'BOO', value: 171.59, ret: -1879.79 },
+        { ticker: 'AFI', value: 659.00, ret: -86.00 },
         { ticker: 'AND', value: 808.70, ret: 401.90 },
-        { ticker: 'AMZN', value: 1622.94, ret: 197.34 },
-        { ticker: 'NVDA', value: 397.88, ret: 51.08 },
+        { ticker: 'BAX', value: 457.59, ret: -199.71 },
+        { ticker: 'BLOK', value: 2174.76, ret: -331.44 },
+        { ticker: 'CBIZ', value: 2017.00, ret: 561.50 },
+        { ticker: 'CCIV', value: 1287.20, ret: 618.80 },
+        { ticker: 'XOM', value: 1703.35, ret: 1703.35 },
+        { ticker: 'FSLY', value: 124.53, ret: -165.27 },
+        { ticker: 'FUBO', value: 9.01, ret: 9.01 },
+        { ticker: 'ILMN', value: 572.61, ret: -523.44 },
+        { ticker: 'TREE', value: 745.02, ret: 44.82 },
+        { ticker: 'NEE', value: 895.95, ret: 169.15 },
+        { ticker: 'NVO', value: 336.63, ret: -239.40 },
+        { ticker: 'PRGO', value: 251.28, ret: -370.32 },
+        { ticker: 'SWKS', value: 632.85, ret: -438.35 },
+        { ticker: 'WDAY', value: 1329.95, ret: -10.35 },
       ],
       'isa-halifax': [
+        { ticker: 'DOCUSIGN', value: 366.02, ret: -202.64 },
+        { ticker: 'EDITAS', value: 21.05, ret: -220.74 },
+        { ticker: 'EVRAZ', value: 20.83, ret: -85.64 },
         { ticker: 'GALLIFORD', value: 1085.60, ret: 684.29 },
         { ticker: 'GLENCORE', value: 1569.27, ret: 329.49 },
         { ticker: 'LLOYDS', value: 17200.41, ret: 8507.80 },
+        { ticker: 'METRO', value: 63.72, ret: -285.06 },
+        { ticker: 'PICTET', value: 1383.02, ret: 339.62 },
+        { ticker: 'SSP', value: 1592.41, ret: -865.36 },
+        { ticker: 'TAYLOR', value: 781.56, ret: -802.07 },
+        { ticker: 'TULLOW', value: 7.03, ret: -357.96 },
       ],
       'pension': [
-        { name: 'Aegon 50/50 Gbl Eq LFS ARC', value: 248256.79, ret: 0 },
-        { name: 'Royal London Fixed Income', value: 102551.40, ret: 0 },
-        { name: 'M&G Dividend Inc GBP', value: 30363.59, ret: 0 },
+        { name: 'Aegon 50/50 Gbl Eq LFS ARC', ticker: 'AEGON1', value: 248256.79, ret: 0 },
+        { name: 'Royal London Fixed Income', ticker: 'RLFI', value: 102551.40, ret: 0 },
+        { name: 'M&G Dividend Inc GBP', ticker: 'MGD', value: 30363.59, ret: 0 },
+        { name: 'iShares Continen Eur Eq', ticker: 'ICEA', value: 12236.30, ret: 0 },
+        { name: 'Vanguard US Equity Index', ticker: 'VUSA', value: 40203.87, ret: 0 },
+        { name: 'M&G Dividend I Inc GBP', ticker: 'MGDI', value: 30363.59, ret: 0 },
+        { name: 'iShares 100 UK Equity', ticker: 'ISF', value: 1155.53, ret: 0 },
+        { name: 'Cash', ticker: 'CASH', value: 19202.31, ret: 0 },
       ]
     };
 
     let currentPortfolio = 'isa-combined';
+    let liveDataCache = {};
 
-    async function fetchStockData(ticker) {
+    // Fetch data from Finnhub
+    async function fetchFinnhubData(ticker) {
+      if (liveDataCache[ticker]) {
+        return liveDataCache[ticker];
+      }
+
       try {
-        const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
+        const response = await fetch(
+          `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_API_KEY}`
+        );
         if (!response.ok) throw new Error('API error');
-        return await response.json();
+        const data = await response.json();
+        liveDataCache[ticker] = data;
+        return data;
       } catch (error) {
-        console.log(`Could not fetch live data for ${ticker}:`, error);
+        console.log(`Could not fetch data for ${ticker}`);
         return null;
       }
     }
 
     function scoreGrowthQuality(ticker, liveData) {
-      if (!liveData || !liveData.quote) return 'N/A';
-      const pe = liveData.quote.pe || 0;
-      const eps = liveData.profile?.metric?.epsTrailingTwelveMonths || 0;
-      return Math.max(40, Math.min(100, 70 + (25 - pe) / 2));
+      if (!liveData || !liveData.pe) return null;
+      // Simple scoring: lower P/E is better, higher earning per share is better
+      const peScore = Math.max(0, Math.min(50, (20 / liveData.pe) * 50));
+      const epsScore = liveData.eps ? 30 : 0;
+      const priceScore = liveData.d ? 20 : 10;
+      return Math.max(20, Math.min(100, peScore + epsScore + priceScore));
     }
 
-    function scoreValueDividend(name, liveData) {
-      if (!liveData || !liveData.quote) return 'N/A';
-      const pe = liveData.quote.pe || 20;
-      const div = liveData.profile?.metric?.dividendYield || 0;
-      const score = (25 / pe) * 35 + (div || 0) * 5 + 30;
-      return Math.max(40, Math.min(100, score));
+    function scoreValueDividend(ticker, liveData) {
+      if (!liveData || !liveData.pe) return null;
+      // Value scoring: focus on low P/E and dividend yield
+      const peScore = Math.max(0, Math.min(50, (15 / liveData.pe) * 50));
+      const divScore = liveData.d ? 30 : 10;
+      return Math.max(20, Math.min(100, peScore + divScore + 20));
     }
 
     function getSignal(score, mode) {
-      if (typeof score !== 'number') return '⏳ Fetching...';
+      if (score === null) return '⏳ Fetching...';
       if (mode === 'growth') {
         if (score >= 80) return '🟢 STRONG BUY';
         if (score >= 60) return '🟡 HOLD';
@@ -431,44 +517,51 @@
       const tbody = document.getElementById('holdingsTable');
       tbody.innerHTML = '';
 
+      // Create all rows first
       data.forEach(pos => {
         totalValue += pos.value;
         totalRet += (pos.ret || 0);
 
         const row = document.createElement('tr');
-        const ticker = pos.ticker || pos.name;
+        const ticker = pos.ticker;
         const retPct = ((pos.ret / (pos.value - pos.ret)) * 100) || 0;
 
         row.innerHTML = `
           <td class="ticker">${ticker}</td>
           <td style="text-align: right; color: #e0e0e0;">£${pos.value.toFixed(0)}</td>
           <td style="text-align: right;" class="${pos.ret >= 0 ? 'positive' : 'negative'}">£${pos.ret.toFixed(0)}</td>
-          <td style="text-align: right; color: #888;">Fetching...</td>
-          <td style="text-align: right; color: #888;">Fetching...</td>
-          <td><span class="loading">⏳ Loading score...</span></td>
+          <td style="text-align: right;" class="${retPct >= 0 ? 'positive' : 'negative'}">${retPct.toFixed(1)}%</td>
+          <td style="text-align: right; color: #888;">—</td>
+          <td style="text-align: right; color: #888;">—</td>
+          <td><span class="loading">⏳</span></td>
           <td style="text-align: center;">⏳</td>
-          <td><span class="loading">Analyzing...</span></td>
+          <td>—</td>
         `;
+        row.id = `row-${ticker}`;
         tbody.appendChild(row);
 
-        // Fetch live data in background
-        fetchStockData(ticker).then(liveData => {
+        // Fetch data in background
+        fetchFinnhubData(ticker).then(liveData => {
           const score = mode === 'growth' ? scoreGrowthQuality(ticker, liveData) : scoreValueDividend(ticker, liveData);
-          const pe = liveData?.quote?.pe?.toFixed(1) || '—';
-          const div = liveData?.profile?.metric?.dividendYield?.toFixed(2) || '—';
+          const pe = liveData?.pe?.toFixed(1) || '—';
+          const div = liveData?.d?.toFixed(2) || '—';
           const signal = getSignal(score, mode);
-          const scoreClass = score >= 80 ? 'score-excellent' : score >= 60 ? 'score-good' : score >= 40 ? 'score-fair' : 'score-critical';
+          const scoreClass = score && score >= 80 ? 'score-excellent' : score && score >= 60 ? 'score-good' : score && score >= 40 ? 'score-fair' : 'score-critical';
 
-          row.innerHTML = `
-            <td class="ticker">${ticker}</td>
-            <td style="text-align: right; color: #e0e0e0;">£${pos.value.toFixed(0)}</td>
-            <td style="text-align: right;" class="${pos.ret >= 0 ? 'positive' : 'negative'}">£${pos.ret.toFixed(0)}</td>
-            <td style="text-align: right; color: #e0e0e0;">${pe}</td>
-            <td style="text-align: right; color: #e0e0e0;">${div}%</td>
-            <td><span class="score-bar ${scoreClass}">${typeof score === 'number' ? score.toFixed(0) : 'N/A'}</span></td>
-            <td style="text-align: center;">${signal}</td>
-            <td>${score >= 75 ? '<span class="flag-risk">✓ Quality</span>' : (score < 40 ? '<span class="flag-risk">⚠️ Review</span>' : '—')}</td>
-          `;
+          const rowEl = document.getElementById(`row-${ticker}`);
+          if (rowEl) {
+            rowEl.innerHTML = `
+              <td class="ticker">${ticker}</td>
+              <td style="text-align: right; color: #e0e0e0;">£${pos.value.toFixed(0)}</td>
+              <td style="text-align: right;" class="${pos.ret >= 0 ? 'positive' : 'negative'}">£${pos.ret.toFixed(0)}</td>
+              <td style="text-align: right;" class="${retPct >= 0 ? 'positive' : 'negative'}">${retPct.toFixed(1)}%</td>
+              <td style="text-align: right; color: #e0e0e0;">${pe}</td>
+              <td style="text-align: right; color: #e0e0e0;">${div}%</td>
+              <td><span class="score-bar ${scoreClass}">${score !== null ? score.toFixed(0) : 'N/A'}</span></td>
+              <td style="text-align: center;">${signal}</td>
+              <td>${score && score >= 75 ? '<span class="flag-risk">✓ Quality</span>' : (score && score < 40 ? '<span class="flag-risk">⚠️ Review</span>' : '—')}</td>
+            `;
+          }
         });
       });
 
@@ -476,6 +569,8 @@
       document.getElementById('posCount').textContent = data.length + ' positions';
       document.getElementById('avgScore').textContent = 'Loading...';
       document.getElementById('scoreGrade').textContent = 'Fetching live data...';
+      document.getElementById('riskCount').textContent = '—';
+      document.getElementById('buyCount').textContent = '—';
     }
 
     function switchPortfolio(portfolio) {
