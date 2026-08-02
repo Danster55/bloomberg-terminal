@@ -1,0 +1,165 @@
+═══════════════════════════════════════════════════════════════════════════════
+  BLOOMBERG TERMINAL — NETLIFY + GITHUB DEPLOYMENT
+  Quick Reference Card for Dan Persaud
+═══════════════════════════════════════════════════════════════════════════════
+
+YOUR FOLDER STRUCTURE (after cloning from GitHub):
+───────────────────────────────────────────────────
+bloomberg-terminal/
+├── index.html                 ← Main terminal UI (all 67 holdings loaded)
+├── netlify.toml              ← Netlify config
+├── package.json              ← Node.js metadata
+├── README.md                 ← GitHub project overview
+├── SETUP_GUIDE.md            ← Full setup instructions
+├── .gitignore                ← Protects secrets
+└── netlify/
+    └── functions/
+        └── stock-data.js     ← Backend function (calls Finnhub API securely)
+
+
+STEP-BY-STEP DEPLOYMENT:
+────────────────────────
+
+1️⃣  CREATE GITHUB REPO (5 mins)
+   • Go to github.com → Click "New"
+   • Name: "bloomberg-terminal"
+   • Make PUBLIC
+   • Click "Create repository"
+   ✅ You now have an empty GitHub repo
+
+2️⃣  DOWNLOAD & SETUP (2 mins)
+   • Download all these files I created:
+     - SETUP_GUIDE.md
+     - README.md
+     - index.html
+     - netlify.toml
+     - package.json
+     - .gitignore
+     - netlify/functions/stock-data.js (create folder first)
+
+   • Folder structure should be EXACT (see above)
+
+3️⃣  PUSH TO GITHUB (2 mins)
+   In terminal:
+   ```
+   cd bloomberg-terminal
+   git add .
+   git commit -m "Initial commit: Bloomberg Terminal"
+   git push origin main
+   ```
+   ✅ Your code is now on GitHub
+
+4️⃣  CONNECT NETLIFY (3 mins)
+   • Go to netlify.com → Sign in
+   • Click "Add new site"
+   • Click "Import an existing project"
+   • Select "GitHub"
+   • Authorize Netlify to access your account
+   • Select "bloomberg-terminal" repo
+   • Click "Deploy site"
+   ✅ Netlify is now building your site (2-3 mins)
+
+5️⃣  ADD YOUR FINNHUB API KEY (1 min) — CRITICAL!
+   In Netlify dashboard:
+   • Click your site name
+   • Go to "Site settings"
+   • Click "Build & deploy" → "Environment"
+   • Click "Edit variables"
+   • Add new variable:
+     KEY:   FINNHUB_API_KEY
+     VALUE: d9nms3hr01qvumgb10m0d9nms3hr01qvumgb10mg
+   • Click "Save"
+   ✅ Your API key is now secure in Netlify
+
+6️⃣  VERIFY LIVE (2 mins)
+   • Netlify gives you a URL (e.g., bloomberg-terminal-xyz.netlify.app)
+   • Click it
+   • You should see: Terminal loading ✓
+   • Click "DAN ISA COMBINED" ✓
+   • Watch live data load (P/E, dividends, earnings) ✓
+   ✅ YOUR TERMINAL IS LIVE!
+
+
+YOUR TERMINAL AT A GLANCE:
+──────────────────────────
+Portfolio Selector Buttons:
+  🟢 DAN ISA COMBINED   → All 67 stocks (growth quality scoring)
+  🟢 T212 (33 stocks)   → Trading 212 only
+  🟢 IG (24 stocks)     → IG ISA only
+  🟢 HALIFAX (10)       → Halifax ISA only
+  🟢 PENSION (£458k)    → Aegon SIPP (value + dividend scoring)
+
+Scores:
+  80+: 🟢 Strong Buy
+  60-79: 🟡 Hold / Buy Dip
+  40-59: 🟠 Review
+  <40: 🔴 Sell / Avoid
+
+What You See:
+  • Ticker (stock symbol)
+  • Value (current holding value in £)
+  • Return (£ gain/loss)
+  • P/E (Price/Earnings ratio) — live from Finnhub
+  • Div Yield (dividend %) — live from Finnhub
+  • SCORE (0-100) — based on your strategy
+  • SIGNAL (🟢🟡🟠🔴) — action recommendation
+  • STATUS (⚠️ or ✓) — quality/risk flag
+
+
+MONTHLY UPDATES:
+────────────────
+1. Export new holdings from each platform
+2. Update the "portfolios" object in index.html
+3. Save & commit:
+   ```
+   git add index.html
+   git commit -m "Update portfolio - Aug 2026"
+   git push origin main
+   ```
+4. Netlify auto-deploys (30 seconds)
+5. Your live terminal updates automatically
+
+
+SECURITY:
+──────────
+✅ Your Finnhub API key is NEVER in the code
+✅ It's stored securely in Netlify environment variables
+✅ Your GitHub repo is public (code only, no secrets)
+✅ Backend function keeps your key private
+✅ Production-ready
+
+
+IF SOMETHING BREAKS:
+────────────────────
+Error: "Netlify deploy failed"
+→ Check build logs in Netlify dashboard
+→ Make sure folder structure matches exactly (esp. netlify/functions/)
+
+Error: "Live data not loading (P/E shows —)"
+→ Check your API key in Netlify environment variables
+→ Verify it matches: d9nms3hr01qvumgb10m0d9nms3hr01qvumgb10mg
+→ Check browser console (F12) for error messages
+
+Error: "Terminal loads but no data shows"
+→ Refresh the page
+→ Wait 30 seconds (Finnhub API takes time)
+→ Check if portfolio data is correct in index.html
+
+
+YOUR NETLIFY URL:
+─────────────────
+Will look like:  https://bloomberg-terminal-[random].netlify.app
+(Save this bookmark!)
+
+
+QUESTIONS?
+──────────
+1. Read SETUP_GUIDE.md (more detail)
+2. Check Netlify build logs
+3. Verify your folder structure matches the diagram above
+4. Let me know what error you see
+
+
+═══════════════════════════════════════════════════════════════════════════════
+You're 5 steps away from having a live investment dashboard!
+═══════════════════════════════════════════════════════════════════════════════
