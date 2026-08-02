@@ -1,7 +1,6 @@
 const https = require('https');
 
 exports.handler = async (event) => {
-  // Only allow GET requests
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
@@ -27,10 +26,10 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Fetch quote data (price info)
+    // Fetch quote data (current price, change, etc)
     const quoteData = await fetchFinnhubData(`quote?symbol=${symbol}&token=${apiKey}`);
     
-    // Fetch company financials (P/E, dividend yield, etc)
+    // Fetch company financials (P/E, dividend yield, EPS, etc)
     const financialsData = await fetchFinnhubData(`company-basic-financials?symbol=${symbol}&metric=all&token=${apiKey}`);
     
     // Merge the data
