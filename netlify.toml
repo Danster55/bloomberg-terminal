@@ -1,3 +1,6 @@
+[build.environment]
+SECRETS_SCAN_OMIT_KEYS = "FINNHUB_API_KEY"
+
 [build]
   command = "npm run build"
   functions = "netlify/functions"
