@@ -27,7 +27,19 @@ exports.handler = async (event) => {
   }
 
   try {
-    const data = await fetchFinnhubData(`quote?symbol=${symbol}&token=${apiKey}`);
+    // Fetch quote data (price info)
+    const quoteData = await fetchFinnhubData(`quote?symbol=${symbol}&token=${apiKey}`);
+    
+    // Fetch company financials (P/E, dividend yield, etc)
+    const financialsData = await fetchFinnhubData(`company-basic-financials?symbol=${symbol}&metric=all&token=${apiKey}`);
+    
+    // Merge the data
+    const mergedData = {
+      ...quoteData,
+      pe: financialsData?.metric?.peBasic || financialsData?.metric?.pe || null,
+      dividendYield: financialsData?.metric?.dividendYield || null,
+      eps: financialsData?.metric?.epsBasic || financialsData?.metric?.eps || null
+    };
     
     return {
       statusCode: 200,
@@ -37,7 +49,7 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         symbol,
-        data: data,
+        data: mergedData,
         timestamp: new Date().toISOString()
       })
     };
