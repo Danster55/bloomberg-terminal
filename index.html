@@ -450,13 +450,16 @@
     let currentPortfolio = 'isa-combined';
     let liveDataCache = {};
 
-    // Call Netlify Function securely
+    // Call Netlify Function securely with rate limiting
     async function fetchStockData(ticker) {
       if (liveDataCache[ticker]) {
         return liveDataCache[ticker];
       }
 
       try {
+        // Add delay to avoid Finnhub rate limiting (60 requests/min limit)
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between requests
+        
         // Call our backend function (no API key exposed)
         const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
         if (!response.ok) throw new Error('API error');
