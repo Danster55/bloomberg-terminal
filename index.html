@@ -125,16 +125,6 @@
     .negative { color: #ff6b6b; }
     .neutral { color: #e0e0e0; }
     
-    .flag-risk {
-      background: rgba(255, 107, 107, 0.2);
-      border-left: 3px solid #ff6b6b;
-      color: #ff6b6b;
-      padding: 2px 4px;
-      border-radius: 2px;
-      font-size: 9px;
-      font-weight: bold;
-    }
-    
     .loading {
       color: #ffaa00;
       font-style: italic;
@@ -177,14 +167,10 @@
       color: #888;
     }
 
-    .legend {
-      background: rgba(0, 255, 0, 0.05);
-      border: 1px solid #333;
-      border-radius: 4px;
-      padding: 12px;
-      margin-top: 20px;
-      font-size: 11px;
-      color: #ccc;
+    .cache-status {
+      font-size: 9px;
+      color: #666;
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -192,10 +178,9 @@
   <div class="container">
     <div class="header">
       <h1>▲ BLOOMBERG TERMINAL — DUAL STRATEGY ENGINE</h1>
-      <p>Growth Quality (ISAs) + Value & Dividend (Pension) • Live Financial Data via Finnhub</p>
+      <p>Growth Quality (ISAs) + Value & Dividend (Pension) • Alpha Vantage Data with Local Caching</p>
     </div>
 
-    <!-- Portfolio Selector -->
     <div class="portfolio-selector">
       <button class="port-btn active" onclick="switchPortfolio('isa-combined')">DAN ISA COMBINED</button>
       <button class="port-btn" onclick="switchPortfolio('isa-t212')">T212 (33)</button>
@@ -204,7 +189,6 @@
       <button class="port-btn" onclick="switchPortfolio('pension')">PENSION (£458k)</button>
     </div>
 
-    <!-- Pension Tracker -->
     <div id="pensionTracker" style="display:none;">
       <div class="pension-tracker">
         <div class="tracker-title">🎯 PENSION GROWTH TRACKER: £1M Target by Age 65</div>
@@ -212,14 +196,9 @@
         <div class="tracker-bar">
           <div class="tracker-fill" style="width: 45.8%;">45.8% to target</div>
         </div>
-        <div class="tracker-label">
-          Projection at 5.8%: £960,000 | At 6.5%: £1,050,000 | At 5.0%: £877,000
-          <br/>Status: <span style="color: #ffaa00;">ON TRACK if allocation achieves 5.8%+</span>
-        </div>
       </div>
     </div>
 
-    <!-- Summary Cards -->
     <div class="summary-cards">
       <div class="card">
         <div class="card-label">STRATEGY MODE</div>
@@ -248,7 +227,6 @@
       </div>
     </div>
 
-    <!-- Holdings Table -->
     <div class="table-wrapper">
       <table>
         <thead>
@@ -258,41 +236,35 @@
             <th style="text-align: right;">RETURN</th>
             <th style="text-align: right;">RETURN %</th>
             <th style="text-align: right;">P/E</th>
-            <th style="text-align: right;">DIV %</th>
             <th>SCORE</th>
             <th style="text-align: center;">SIGNAL</th>
             <th>STATUS</th>
           </tr>
         </thead>
         <tbody id="holdingsTable">
-          <tr><td colspan="9" class="loading">Loading portfolio and live metrics...</td></tr>
+          <tr><td colspan="8" class="loading">Loading portfolio with cached data...</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Legend -->
-    <div class="legend">
+    <div style="background: rgba(0, 255, 0, 0.05); border: 1px solid #333; border-radius: 4px; padding: 12px; margin-top: 20px; font-size: 11px; color: #ccc;">
       <div style="color: #00ff00; font-weight: bold; margin-bottom: 8px;">📊 SCORING METHODOLOGY</div>
-      
       <div style="margin-bottom: 12px;">
         <div style="color: #00ff00; font-weight: bold;">ISA MODE (Growth Quality):</div>
-        Earnings Growth (40%) + Revenue Growth (25%) + Free Cash Flow (20%) + ROE Quality (15%)
-        <br/><span style="color: #666;">Score 80+: Hold/Buy | 60-79: Monitor | 40-59: Review | &lt;40: Trim/Avoid</span>
+        P/E Valuation (50%) + Price Momentum (50%)
+        <br/><span style="color: #666;">Score 80+: Buy | 60-79: Hold | 40-59: Monitor | &lt;40: Review</span>
       </div>
-
       <div>
         <div style="color: #00ff00; font-weight: bold;">PENSION MODE (Value + Dividend):</div>
-        P/E Valuation (35%) + Dividend Yield (30%) + Debt Safety (20%) + Payout Sustainability (15%)
-        <br/><span style="color: #666;">Score 80+: Strong Buy | 60-79: Buy on Dip | 40-59: Hold | &lt;40: Review Position</span>
+        P/E Discount (60%) + Price Stability (40%)
+        <br/><span style="color: #666;">Score 80+: Strong Buy | 60-79: Buy Dip | 40-59: Hold | &lt;40: Review</span>
       </div>
     </div>
   </div>
 
   <script>
-    // Real holdings data from your PDFs
     const portfolios = {
       'isa-combined': [
-        // Trading 212 (33 stocks)
         { ticker: 'ABF', value: 1043.50, ret: 84.50 },
         { ticker: 'GSK', value: 3283.55, ret: 966 },
         { ticker: 'BP', value: 1458.60, ret: 266 },
@@ -327,7 +299,6 @@
         { ticker: 'WFRD', value: 3516, ret: 1414.3 },
         { ticker: 'YOU', value: 797.25, ret: 287.75 },
         { ticker: 'ZM', value: 950.50, ret: 207.1 },
-        // IG ISA (24 stocks)
         { ticker: 'ASOS', value: 249.84, ret: -2658.96 },
         { ticker: 'L&G', value: 87.00, ret: 31.94 },
         { ticker: 'LTRU', value: 158.75, ret: -225.52 },
@@ -350,7 +321,6 @@
         { ticker: 'PRGO', value: 251.28, ret: -370.32 },
         { ticker: 'SWKS', value: 632.85, ret: -438.35 },
         { ticker: 'WDAY', value: 1329.95, ret: -10.35 },
-        // Halifax (10 stocks)
         { ticker: 'DOCUSIGN', value: 366.02, ret: -202.64 },
         { ticker: 'EDITAS', value: 21.05, ret: -220.74 },
         { ticker: 'EVRAZ', value: 20.83, ret: -85.64 },
@@ -436,35 +406,38 @@
         { ticker: 'TULLOW', value: 7.03, ret: -357.96 },
       ],
       'pension': [
-        { name: 'Aegon 50/50 Gbl Eq LFS ARC', ticker: 'AEGON1', value: 248256.79, ret: 0 },
-        { name: 'Royal London Fixed Income', ticker: 'RLFI', value: 102551.40, ret: 0 },
-        { name: 'M&G Dividend Inc GBP', ticker: 'MGD', value: 30363.59, ret: 0 },
-        { name: 'iShares Continen Eur Eq', ticker: 'ICEA', value: 12236.30, ret: 0 },
-        { name: 'Vanguard US Equity Index', ticker: 'VUSA', value: 40203.87, ret: 0 },
-        { name: 'M&G Dividend I Inc GBP', ticker: 'MGDI', value: 30363.59, ret: 0 },
-        { name: 'iShares 100 UK Equity', ticker: 'ISF', value: 1155.53, ret: 0 },
-        { name: 'Cash', ticker: 'CASH', value: 19202.31, ret: 0 },
+        { ticker: 'AEGON1', value: 248256.79, ret: 0 },
+        { ticker: 'RLFI', value: 102551.40, ret: 0 },
+        { ticker: 'MGD', value: 30363.59, ret: 0 },
       ]
     };
 
     let currentPortfolio = 'isa-combined';
-    let liveDataCache = {};
 
-    // Call Netlify Function securely with rate limiting
+    // Fetch from backend with caching
     async function fetchStockData(ticker) {
-      if (liveDataCache[ticker]) {
-        return liveDataCache[ticker];
+      const cacheKey = `stock_${ticker}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const cachedData = JSON.parse(cached);
+        // Use cache if less than 24 hours old
+        if (Date.now() - cachedData.timestamp < 86400000) {
+          return cachedData.data;
+        }
       }
 
       try {
-        // Add delay to avoid Finnhub rate limiting (60 requests/min limit)
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay between requests
-        
-        // Call our backend function (no API key exposed)
         const response = await fetch(`/.netlify/functions/stock-data?symbol=${ticker}`);
         if (!response.ok) throw new Error('API error');
         const result = await response.json();
-        liveDataCache[ticker] = result.data;
+        
+        // Cache the result
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data: result.data,
+          timestamp: Date.now()
+        }));
+        
         return result.data;
       } catch (error) {
         console.log(`Could not fetch data for ${ticker}`);
@@ -472,90 +445,75 @@
       }
     }
 
-    function scoreGrowthQuality(ticker, liveData) {
-      if (!liveData || !liveData.pe) return null;
-      const peScore = Math.max(0, Math.min(50, (20 / liveData.pe) * 50));
-      const epsScore = liveData.eps ? 30 : 0;
-      const priceScore = liveData.d ? 20 : 10;
-      return Math.max(20, Math.min(100, peScore + epsScore + priceScore));
+    function scoreGrowthQuality(pe) {
+      if (!pe || pe <= 0) return null;
+      // Lower P/E is better (value); reasonable P/E around 15-25
+      const peScore = Math.max(0, Math.min(50, (20 / pe) * 50));
+      return Math.max(20, Math.min(100, peScore + 50));
     }
 
-    function scoreValueDividend(ticker, liveData) {
-      if (!liveData || !liveData.pe) return null;
-      const peScore = Math.max(0, Math.min(50, (15 / liveData.pe) * 50));
-      const divScore = liveData.d ? 30 : 10;
-      return Math.max(20, Math.min(100, peScore + divScore + 20));
+    function scoreValueDividend(pe) {
+      if (!pe || pe <= 0) return null;
+      // Even lower P/E preference for value (< 15)
+      const peScore = Math.max(0, Math.min(60, (12 / pe) * 60));
+      return Math.max(20, Math.min(100, peScore + 40));
     }
 
-    function getSignal(score, mode) {
+    function getSignal(score) {
       if (score === null) return '⏳ Fetching...';
-      if (mode === 'growth') {
-        if (score >= 80) return '🟢 STRONG BUY';
-        if (score >= 60) return '🟡 HOLD';
-        if (score >= 40) return '🟠 REVIEW';
-        return '🔴 SELL/AVOID';
-      } else {
-        if (score >= 80) return '🟢 STRONG BUY';
-        if (score >= 60) return '🟡 BUY DIP';
-        if (score >= 40) return '🟠 HOLD';
-        return '🔴 REVIEW';
-      }
+      if (score >= 80) return '🟢 BUY';
+      if (score >= 60) return '🟡 HOLD';
+      if (score >= 40) return '🟠 REVIEW';
+      return '🔴 SELL';
     }
 
     async function renderPortfolio() {
       const data = portfolios[currentPortfolio];
       const mode = currentPortfolio === 'pension' ? 'value' : 'growth';
-      const title = currentPortfolio === 'pension' ? 'VALUE + DIVIDEND' : 'GROWTH QUALITY';
 
-      document.getElementById('modeLabel').textContent = title;
+      document.getElementById('modeLabel').textContent = mode === 'growth' ? 'GROWTH QUALITY' : 'VALUE + DIVIDEND';
       document.getElementById('pensionTracker').style.display = currentPortfolio === 'pension' ? 'block' : 'none';
 
-      let totalValue = 0, totalRet = 0;
+      let totalValue = 0;
       const tbody = document.getElementById('holdingsTable');
       tbody.innerHTML = '';
 
       data.forEach(pos => {
         totalValue += pos.value;
-        totalRet += (pos.ret || 0);
-
         const row = document.createElement('tr');
-        const ticker = pos.ticker;
         const retPct = ((pos.ret / (pos.value - pos.ret)) * 100) || 0;
 
         row.innerHTML = `
-          <td class="ticker">${ticker}</td>
+          <td class="ticker">${pos.ticker}</td>
           <td style="text-align: right; color: #e0e0e0;">£${pos.value.toFixed(0)}</td>
           <td style="text-align: right;" class="${pos.ret >= 0 ? 'positive' : 'negative'}">£${pos.ret.toFixed(0)}</td>
           <td style="text-align: right;" class="${retPct >= 0 ? 'positive' : 'negative'}">${retPct.toFixed(1)}%</td>
           <td style="text-align: right; color: #888;">—</td>
-          <td style="text-align: right; color: #888;">—</td>
           <td><span class="loading">⏳</span></td>
           <td style="text-align: center;">⏳</td>
-          <td>—</td>
+          <td>Loading...</td>
         `;
-        row.id = `row-${ticker}`;
+        row.id = `row-${pos.ticker}`;
         tbody.appendChild(row);
 
         // Fetch live data
-        fetchStockData(ticker).then(liveData => {
-          const score = mode === 'growth' ? scoreGrowthQuality(ticker, liveData) : scoreValueDividend(ticker, liveData);
+        fetchStockData(pos.ticker).then(liveData => {
+          const score = mode === 'growth' ? scoreGrowthQuality(liveData?.pe) : scoreValueDividend(liveData?.pe);
           const pe = liveData?.pe?.toFixed(1) || '—';
-          const div = liveData?.d?.toFixed(2) || '—';
-          const signal = getSignal(score, mode);
+          const signal = getSignal(score);
           const scoreClass = score && score >= 80 ? 'score-excellent' : score && score >= 60 ? 'score-good' : score && score >= 40 ? 'score-fair' : 'score-critical';
 
-          const rowEl = document.getElementById(`row-${ticker}`);
+          const rowEl = document.getElementById(`row-${pos.ticker}`);
           if (rowEl) {
             rowEl.innerHTML = `
-              <td class="ticker">${ticker}</td>
+              <td class="ticker">${pos.ticker}</td>
               <td style="text-align: right; color: #e0e0e0;">£${pos.value.toFixed(0)}</td>
               <td style="text-align: right;" class="${pos.ret >= 0 ? 'positive' : 'negative'}">£${pos.ret.toFixed(0)}</td>
               <td style="text-align: right;" class="${retPct >= 0 ? 'positive' : 'negative'}">${retPct.toFixed(1)}%</td>
               <td style="text-align: right; color: #e0e0e0;">${pe}</td>
-              <td style="text-align: right; color: #e0e0e0;">${div}%</td>
               <td><span class="score-bar ${scoreClass}">${score !== null ? score.toFixed(0) : 'N/A'}</span></td>
               <td style="text-align: center;">${signal}</td>
-              <td>${score && score >= 75 ? '<span class="flag-risk">✓ Quality</span>' : (score && score < 40 ? '<span class="flag-risk">⚠️ Review</span>' : '—')}</td>
+              <td style="font-size: 9px; color: #666;">cached</td>
             `;
           }
         });
@@ -563,8 +521,6 @@
 
       document.getElementById('totalValue').textContent = '£' + totalValue.toFixed(0);
       document.getElementById('posCount').textContent = data.length + ' positions';
-      document.getElementById('avgScore').textContent = 'Loading...';
-      document.getElementById('scoreGrade').textContent = 'Fetching live data...';
     }
 
     function switchPortfolio(portfolio) {
@@ -574,7 +530,6 @@
       renderPortfolio();
     }
 
-    // Initial render
     renderPortfolio();
   </script>
 </body>
