@@ -31,12 +31,15 @@ exports.handler = async (event) => {
       `query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`
     );
 
+    console.log(`DEBUG ${symbol}:`, JSON.stringify(overviewData));
+
     // Extract relevant fields from OVERVIEW
     const data = {
       c: parseFloat(overviewData['LatestPrice']) || null,
       pe: parseFloat(overviewData['TrailingPE']) || parseFloat(overviewData['ForwardPE']) || null,
       dividend: parseFloat(overviewData['DividendPerShare']) || null,
-      symbol: symbol
+      symbol: symbol,
+      debug: overviewData
     };
 
     return {
