@@ -26,21 +26,16 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Fetch global quote (price, P/E, dividend yield)
-    const quoteData = await fetchAlphaVantageData(
-      `query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`
+    // Fetch company overview (includes P/E, dividend yield, etc)
+    const overviewData = await fetchAlphaVantageData(
+      `query?function=OVERVIEW&symbol=${symbol}&apikey=${apiKey}`
     );
 
-    // Extract relevant fields
-    const quote = quoteData['Global Quote'] || {};
-    
+    // Extract relevant fields from OVERVIEW
     const data = {
-      c: parseFloat(quote['05. price']) || null,
-      pc: parseFloat(quote['08. previous close']) || null,
-      d: parseFloat(quote['09. change']) || null,
-      dp: parseFloat(quote['10. change percent']) || null,
-      pe: parseFloat(quote['12. pe ratio']) || null,
-      dividend: parseFloat(quote['21. dividend amount']) || null,
+      c: parseFloat(overviewData['LatestPrice']) || null,
+      pe: parseFloat(overviewData['TrailingPE']) || parseFloat(overviewData['ForwardPE']) || null,
+      dividend: parseFloat(overviewData['DividendPerShare']) || null,
       symbol: symbol
     };
 
