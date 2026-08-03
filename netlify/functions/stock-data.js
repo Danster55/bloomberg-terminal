@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     };
   }
 
-  const apiKey = process.env.FINNHUB_API_KEY;
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
   if (!apiKey) {
     return {
       statusCode: 500,
@@ -26,29 +26,34 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Fetch quote data (current price, change, etc)
-    const quoteData = await fetchFinnhubData(`quote?symbol=${symbol}&token=${apiKey}`);
+    // Fetch global quote (price, P/E, dividend yield)
+    const quoteData = await fetchAlphaVantageData(
+      `query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`
+    );
+
+    // Extract relevant fields
+    const quote = quoteData['Global Quote'] || {};
     
-    // Fetch company financials (P/E, dividend yield, EPS, etc)
-    const financialsData = await fetchFinnhubData(`company-basic-financials?symbol=${symbol}&metric=all&token=${apiKey}`);
-    
-    // Merge the data
-    const mergedData = {
-      ...quoteData,
-      pe: financialsData?.metric?.peBasic || financialsData?.metric?.pe || null,
-      dividendYield: financialsData?.metric?.dividendYield || null,
-      eps: financialsData?.metric?.epsBasic || financialsData?.metric?.eps || null
+    const data = {
+      c: parseFloat(quote['05. price']) || null,
+      pc: parseFloat(quote['08. previous close']) || null,
+      d: parseFloat(quote['09. change']) || null,
+      dp: parseFloat(quote['10. change percent']) || null,
+      pe: parseFloat(quote['12. pe ratio']) || null,
+      dividend: parseFloat(quote['21. dividend amount']) || null,
+      symbol: symbol
     };
-    
+
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'max-age=3600'
       },
       body: JSON.stringify({
         symbol,
-        data: mergedData,
+        data: data,
         timestamp: new Date().toISOString()
       })
     };
@@ -64,12 +69,12 @@ exports.handler = async (event) => {
   }
 };
 
-function fetchFinnhubData(endpoint) {
+function fetchAlphaVantageData(endpoint) {
   return new Promise((resolve, reject) => {
     const options = {
-      hostname: 'finnhub.io',
+      hostname: 'www.alphavantage.co',
       port: 443,
-      path: `/api/v1/${endpoint}`,
+      path: `/query?${endpoint.split('?')[1]}`,
       method: 'GET'
     };
 
